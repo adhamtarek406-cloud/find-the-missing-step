@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find the Missing Step</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: one conversation card at a time, picked by pill tabs; each card reveals its missing steps on demand. Tamara design system, light only by design. */
+:root{
+  color-scheme:light;
+  --lavender:#9600f1; --deep:#5300ba; --active:#40008f; --lilac:#e5cfff; --wash:#f6eeff;
+  --ink:#2a3051; --body:#444c6d; --muted:#707698; --line-soft:#e6e6f3;
+  --page:#f2f2ff; --card:#ffffff; --focus:#5b22ff;
+  --warn-bg:#fff9d9; --warn-ink:#985628;
+  --info-bg:#dce4ff; --info-ink:#3716ba;
+  --f-display:"Outfit","Plus Jakarta Sans",system-ui,sans-serif;
+  --f-body:"Plus Jakarta Sans",system-ui,sans-serif;
+  --f-ar:"IBM Plex Sans Arabic","Plus Jakarta Sans",system-ui,sans-serif;
+  --r-sm:10px; --r-lg:20px; --r-pill:999px;
+  --sh-xs:0 1px 2px rgba(42,48,81,.06); --sh-sm:0 2px 8px rgba(42,48,81,.07);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+main{max-width:1280px;margin:0 auto;padding:48px 32px 64px;display:flex;flex-direction:column;gap:32px}
+@media (max-width:620px){main{padding:24px 16px 48px;gap:24px}}
+h1,h2{font-family:var(--f-display);color:var(--ink);margin:0}
+p,ol{margin:0}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+svg.i{flex:none;display:block}
+
+/* Header */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.top-text{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.05;text-wrap:balance}
+@media (max-width:620px){h1{font-size:28px}}
+
+/* Button (DS: secondary sm, ghost md) */
+.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:var(--r-pill);font-weight:600;line-height:1;white-space:nowrap;color:var(--lavender);background:transparent;transition:background .16s var(--ease),color .16s var(--ease),box-shadow .16s var(--ease),transform 80ms var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn-secondary{height:36px;padding:0 16px;gap:6px;font-size:14px;box-shadow:inset 0 0 0 1.5px var(--lavender)}
+.btn-secondary:hover,.btn-secondary:active{color:var(--deep);box-shadow:inset 0 0 0 1.5px var(--deep)}
+.btn-ghost{height:48px;padding:0 24px;gap:8px;font-size:16px}
+.btn-ghost:hover{background:var(--wash)}
+.btn-ghost:active{background:var(--lilac)}
+
+/* Tabs (DS: pill) */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;align-self:flex-start;padding:4px;border-radius:var(--r-pill);background:var(--line-soft);max-width:100%}
+.tab{flex:0 0 auto;border:0;height:36px;padding:0 16px;border-radius:var(--r-pill);background:transparent;color:var(--muted);font-size:14px;font-weight:500;transition:color .16s var(--ease),background .16s var(--ease)}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:#fff;color:var(--deep);font-weight:600;box-shadow:var(--sh-xs)}
+@media (max-width:520px){.tabs{border-radius:22px}.tab{padding:0 12px;font-size:13px}}
+
+/* Card */
+.stage{width:100%;max-width:760px;display:flex;flex-direction:column}
+.card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh-sm);display:flex;flex-direction:column;overflow:hidden}
+.card[hidden]{display:none}
+.card-head{padding:20px 24px 16px;display:flex;flex-direction:column;gap:12px}
+.title-row{display:flex;align-items:center;gap:12px}
+.code{flex:none;width:48px;height:48px;border-radius:var(--r-sm);background:var(--lavender);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:700;font-size:16px}
+.code.deep{background:var(--deep)}
+h2{font-size:26px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+@media (max-width:520px){.card-head{padding:18px 16px 14px}h2{font-size:22px}}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+
+/* Badge (DS: md) */
+.badge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:var(--r-pill);font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+.b-soft{background:var(--lilac);color:var(--deep)}
+.b-neutral{background:var(--line-soft);color:var(--ink)}
+.b-info{background:var(--info-bg);color:var(--info-ink)}
+.b-warning{background:var(--warn-bg);color:var(--warn-ink)}
+.dot{width:6px;height:6px;border-radius:99px;background:currentColor}
+
+/* Conversation */
+.chat{padding:4px 24px 20px;display:flex;flex-direction:column;gap:12px}
+@media (max-width:520px){.chat{padding:4px 16px 18px}}
+.msg{display:flex;flex-direction:column;align-items:flex-start;gap:4px;max-width:88%}
+.msg.agent{align-items:flex-end;align-self:flex-end}
+.who{font-size:14px;font-weight:600;color:var(--muted)}
+.agent .who{color:var(--lavender)}
+.bubble{padding:14px 18px;background:var(--page);border-radius:16px 16px 16px 4px;font-size:18px;line-height:1.55;color:var(--ink);text-wrap:pretty}
+.agent .bubble{background:var(--wash);border-radius:16px 16px 4px 16px}
+.chat[dir="rtl"]{font-family:var(--f-ar)}
+.chat[dir="rtl"] .who{font-size:15px}
+.chat[dir="rtl"] .bubble{font-size:20px;line-height:1.7;border-radius:16px 16px 4px 16px}
+.chat[dir="rtl"] .agent .bubble{border-radius:16px 16px 16px 4px}
+@media (max-width:520px){.msg{max-width:94%}.bubble{font-size:16px;padding:12px 16px}.chat[dir="rtl"] .bubble{font-size:18px}}
+
+/* Footer + missing steps */
+.card-foot{border-top:1px solid var(--line-soft);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+@media (max-width:520px){.card-foot .btn-ghost{padding:0 14px}}
+.steps{padding:16px 24px 24px;list-style:none;display:flex;flex-direction:column;gap:12px;background:var(--page)}
+.steps[hidden]{display:none}
+@media (max-width:520px){.steps{padding:14px 16px 20px}}
+.steps li{display:flex;gap:12px;align-items:flex-start}
+.num{flex:none;width:28px;height:28px;border-radius:99px;box-shadow:inset 0 0 0 1.5px var(--lavender);color:var(--lavender);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.step{font-size:18px;line-height:1.55;color:var(--body);text-wrap:pretty}
+@media (max-width:520px){.step{font-size:16px;padding-top:2px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div class="top-text">
+      <span class="eyebrow">Conversation review</span>
+      <h1>Resolved, but not fully answered</h1>
+    </div>
+    <button type="button" class="btn btn-secondary" id="toggleAll"></button>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Conversations" id="tabs"></div>
+  <div class="stage" id="stage"></div>
+</main>
+
+<script>
+(function(){
+  var ICONS = {
+    eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+    'eye-off': '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
+    'chevron-up': '<path d="m18 15-6-6-6 6"/>',
+    'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+    user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    languages: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+    store: '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/>'
+  };
+  function icon(name, size){
+    return '<svg class="i" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICONS[name]+'</svg>';
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  var CONVOS = [
+    {
+      id:'m1', code:'M1', title:'Partial return', audience:'Customer', lang:'English',
+      chat:[
+        ['Noura','I returned one of the two items. Why am I still being charged the full instalment?'],
+        ['Agent','The partial refund has been processed and will be adjusted against your plan.'],
+        ['Noura','ok thanks']
+      ],
+      steps:[
+        'What the new instalment amount is',
+        'Whether the next payment already reflects it',
+        'When the change shows in the app',
+        'What to do if the next charge is still the full amount'
+      ]
+    },
+    {
+      id:'m2', code:'M2', title:'Account unlocked', audience:'Customer', lang:'Arabic', rtl:true,
+      chat:[
+        ['عبدالله','حسابي موقوف ما أقدر أشتري'],
+        ['الموظف','تم فك الإيقاف عن حسابك، تقدر تستخدمه الحين.'],
+        ['عبدالله','طيب']
+      ],
+      steps:[
+        'Why the account was paused',
+        'Whether the failed order needs to be placed again',
+        'How to avoid it next time, e.g. keeping personal details up to date',
+        'Who to contact if it happens again'
+      ]
+    },
+    {
+      id:'m3', code:'M3', title:'Delayed settlement', audience:'Merchant', lang:'English', deep:true,
+      chat:[
+        ['Tarek','Our payout for last week is missing.'],
+        ['Agent','It was held for reconciliation and has now been released.'],
+        ['Tarek','Fine.']
+      ],
+      steps:[
+        'Why it was held',
+        'The exact amount released',
+        'When it will land in the bank account',
+        'Whether future payouts are affected',
+        'How the merchant will be told if it happens again'
+      ]
+    }
+  ];
+
+  var startOpen = new URLSearchParams(location.search).has('open');
+  var state = { tab:'m1', open:{} };
+  CONVOS.forEach(function(c){ state.open[c.id] = startOpen; });
+
+  var tabsEl = document.getElementById('tabs');
+  var stageEl = document.getElementById('stage');
+  var toggleAllEl = document.getElementById('toggleAll');
+
+  tabsEl.innerHTML = CONVOS.map(function(c){
+    return '<button type="button" class="tab" role="tab" id="tab-'+c.id+'" aria-controls="card-'+c.id+'" data-id="'+c.id+'">'+c.code+' · '+esc(c.title)+'</button>';
+  }).join('');
+
+  stageEl.innerHTML = CONVOS.map(function(c){
+    var agentName = c.chat[1][0];
+    var audience = c.audience === 'Merchant'
+      ? '<span class="badge b-info">'+icon('store',14)+'Merchant</span>'
+      : '<span class="badge b-soft">'+icon('user',14)+'Customer</span>';
+    var msgs = c.chat.map(function(m){
+      return '<div class="msg'+(m[0]===agentName?' agent':'')+'"><span class="who">'+esc(m[0])+'</span><p class="bubble">'+esc(m[1])+'</p></div>';
+    }).join('');
+    var steps = c.steps.map(function(s,i){
+      return '<li><span class="num" aria-hidden="true">'+(i+1)+'</span><span class="step">'+esc(s)+'</span></li>';
+    }).join('');
+    return '<article class="card" role="tabpanel" id="card-'+c.id+'" aria-labelledby="tab-'+c.id+'" data-screen-label="'+c.code+' '+esc(c.title)+'">'+
+      '<div class="card-head">'+
+        '<div class="title-row"><span class="code'+(c.deep?' deep':'')+'" aria-hidden="true">'+c.code+'</span><h2>'+esc(c.title)+'</h2></div>'+
+        '<div class="badges">'+audience+'<span class="badge b-neutral">'+icon('languages',14)+c.lang+'</span></div>'+
+      '</div>'+
+      '<div class="chat"'+(c.rtl?' dir="rtl" lang="ar"':'')+'>'+msgs+'</div>'+
+      '<div class="card-foot">'+
+        '<button type="button" class="btn btn-ghost" data-toggle="'+c.id+'" aria-controls="steps-'+c.id+'"></button>'+
+        '<span class="badge b-warning"><span class="dot"></span>'+c.steps.length+' gaps</span>'+
+      '</div>'+
+      '<ol class="steps" id="steps-'+c.id+'" aria-label="Missing steps">'+steps+'</ol>'+
+    '</article>';
+  }).join('');
+
+  function allOpen(){ return CONVOS.every(function(c){ return state.open[c.id]; }); }
+
+  function render(){
+    CONVOS.forEach(function(c){
+      var on = state.tab === c.id;
+      var tab = document.getElementById('tab-'+c.id);
+      tab.setAttribute('aria-selected', on);
+      tab.tabIndex = on ? 0 : -1;
+      document.getElementById('card-'+c.id).hidden = !on;
+
+      var open = state.open[c.id];
+      var btn = stageEl.querySelector('[data-toggle="'+c.id+'"]');
+      btn.setAttribute('aria-expanded', open);
+      btn.innerHTML = (open ? 'Hide missing steps' : 'Show missing steps') + icon(open ? 'chevron-up' : 'chevron-down', 18);
+      document.getElementById('steps-'+c.id).hidden = !open;
+    });
+    var all = allOpen();
+    toggleAllEl.innerHTML = icon(all ? 'eye-off' : 'eye', 16) + (all ? 'Hide all missing steps' : 'Show all missing steps');
+  }
+
+  tabsEl.addEventListener('click', function(e){
+    var t = e.target.closest('.tab');
+    if (!t) return;
+    state.tab = t.dataset.id; render();
+  });
+  tabsEl.addEventListener('keydown', function(e){
+    var keys = { ArrowRight:1, ArrowLeft:-1, Home:'first', End:'last' };
+    if (!(e.key in keys)) return;
+    e.preventDefault();
+    var i = CONVOS.findIndex(function(c){ return c.id === state.tab; });
+    var k = keys[e.key];
+    i = k === 'first' ? 0 : k === 'last' ? CONVOS.length-1 : (i + k + CONVOS.length) % CONVOS.length;
+    state.tab = CONVOS[i].id; render();
+    document.getElementById('tab-'+state.tab).focus();
+  });
+  stageEl.addEventListener('click', function(e){
+    var b = e.target.closest('[data-toggle]');
+    if (!b) return;
+    var id = b.dataset.toggle;
+    state.open[id] = !state.open[id]; render();
+  });
+  toggleAllEl.addEventListener('click', function(){
+    var v = !allOpen();
+    CONVOS.forEach(function(c){ state.open[c.id] = v; });
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
